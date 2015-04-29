@@ -40,7 +40,9 @@ function equella_get_course_contents($courseid, $sectionid) {
 
     $coursecontents = new stdClass();
     $coursecontents->id = $course->id;
-    $coursecontents->code = $course->idnumber;
+    if (!empty($course->idnumber)) {
+        $coursecontents->code = $course->idnumber;
+    }
     $coursecontents->name = $course->fullname;
     $coursecontents->targetable = false;
     $coursecontents->folders = array();
@@ -240,20 +242,22 @@ function equella_build_integration_url($args, $appendtoken = true) {
     $callbackurl = new moodle_url('/mod/equella/callbackmulti.php', $callbackurlparams);
     $cancelurl = new moodle_url('/mod/equella/cancel.php', array('course' => $args->course));
 
-    $coursecode = equella_get_coursecode($args->course);
     $equrlparams = array(
         'method' => 'lms',
         'attachmentUuidUrls' => 'true',
         'returnprefix' => 'tle',
         'template' => 'standard',
         'courseId' => $args->course,
-        'courseCode' => $coursecode,
         'action' => $CFG->equella_action,
         'selectMultiple' => 'true',
         'cancelDisabled' => 'true',
         'returnurl' => $callbackurl->out(false),
         'cancelurl' => $cancelurl->out(false),
     );
+    $coursecode = equella_get_coursecode($args->course);
+    if (!empty($coursecode)) {
+        $equrlparams['courseCode'] = $coursecode;
+    }
 
     if ($appendtoken) {
         $course = $DB->get_record('course', array('id' => $args->course), '*', MUST_EXIST);
